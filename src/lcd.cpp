@@ -1,8 +1,10 @@
 #include <Arduino.h>
-#include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
 #include "lcd.h"
+#include "audio.h"
+
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 static byte idx_0[8] = {
   0b00000,
@@ -94,8 +96,6 @@ static byte halftone_bytes[8] = {
 };
 static byte halftone = byte(7);
 
-static LiquidCrystal_I2C lcd(0x3F, 16, 2);
-
 static bool displayed = false;
 void flashReceiveScreen() {
   unsigned long time = millis() % 2000;
@@ -129,6 +129,7 @@ void confirmScreen() {
   lcd.write(block);
   lcd.setCursor(8, 1); 
   lcd.write(block);
+  tone(BUZZER_PIN, 44000, 100);
   delay(200);
 
   for (int i = 1; i <= 3; i++) {
@@ -140,6 +141,7 @@ void confirmScreen() {
     lcd.write(block);
     lcd.setCursor(8 - i - 1, 1); 
     lcd.write(block);
+    tone(BUZZER_PIN, 44000, 100);
     delay(200);
   }
 
@@ -147,6 +149,7 @@ void confirmScreen() {
   lcd.write(block);
   lcd.setCursor(8 - 5, 1); 
   lcd.write(block);
+  tone(BUZZER_PIN, 44000, 100);
   delay(200);
   for (int i = 1; i <= 4; i++) {
     lcd.setCursor(8 + i + 3, 0); 
@@ -157,22 +160,29 @@ void confirmScreen() {
     lcd.write(halftone);
     lcd.setCursor(8 - i - 5, 1); 
     lcd.write(halftone);
+    tone(BUZZER_PIN, 34000, 100);
     delay(200);
   }
 
   lcd.setCursor(6, 0); 
   lcd.write(byte(0));
+  tone(BUZZER_PIN, 4000, 100);
   delay(200);
   lcd.write(byte(1));
+  tone(BUZZER_PIN, 4000, 100);
   delay(200);
   lcd.write(byte(2));
+  tone(BUZZER_PIN, 4000, 100);
   delay(200);
   lcd.setCursor(6, 1); 
   lcd.write(byte(3));
+  tone(BUZZER_PIN, 4000, 100);
   delay(200);
   lcd.write(byte(4));
+  tone(BUZZER_PIN, 4000, 100);
   delay(200);
   lcd.write(byte(5));
+  tone(BUZZER_PIN, 54000, 100);
   delay(200);
 }
 
@@ -241,6 +251,7 @@ void closeScreen() {
 
   lcd.noBacklight();
   lcd.noDisplay();
+  lcd.clear();
   screenClosed = true;
 }
 
@@ -249,4 +260,11 @@ void openScreen() {
   lcd.display();
   lcd.backlight();
   screenClosed = false;
+}
+
+void clearLine(int line) {
+  for (int i = 0; i < 16; i++) {
+    lcd.setCursor(i, line);
+    lcd.write(' ');
+  }
 }
