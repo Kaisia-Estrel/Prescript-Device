@@ -1,3 +1,7 @@
+#include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+
 #include "lcd.h"
 
 static byte idx_0[8] = {
@@ -229,4 +233,20 @@ void glitchPrint(int x, int y, String text, int loopSize) {
 
 void clearScreen() {
   lcd.clear();
+}
+
+bool screenClosed = false;
+void closeScreen() {
+  if (screenClosed) return;
+
+  lcd.noBacklight();
+  lcd.noDisplay();
+  screenClosed = true;
+}
+
+void openScreen() {
+  if (!screenClosed) return;
+  lcd.display();
+  lcd.backlight();
+  screenClosed = false;
 }

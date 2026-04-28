@@ -1,18 +1,18 @@
-// #include <SoftwareSerial.h>
-#include <ezButton.h>
-// #include <LiquidCrystal_I2C.h>
 
 #include "src/lcd.h"
+#include "src/button.h"
 
-ezButton button(7);
+#include <SoftwareSerial.h>
+
+Button button(7);
 // SoftwareSerial BT(2, 3);  // RX, TX
 
 
 void setup() {
   Serial.begin(9600);
-  button.setDebounceTime(50);
+  Serial.println(sizeof(unsigned long));
+  Serial.println(sizeof(uint64_t));
   // BT.begin(9600);  // default HC-06 baud
-  //
 
   setupLCD();
 }
@@ -26,35 +26,37 @@ enum State {
   PRESCRIPT_FINISHED,
 };
 
-State state = PRESCRIPT_RECEIVED;
-
+State state = PRESCRIPT_FINISHED;
 void loop() {
-  button.loop();
-  bool buttonPressed = button.isPressed();
   switch (state) {
+    case IDLE:
+      closeScreen();
+      if (button.isPressed()) {
+        openScreen();
+        state = PRESCRIPT_RECEIVED;
+      }
+      break;
     case PRESCRIPT_RECEIVED:
-      if (buttonPressed) {
+      if (button.isPressed()) {
         state = PRESCRIPT_DISPLAYED;
         confirmScreen();
         glitchPrint(0, 0, "Prescript Text", 20);
         glitchPrint(1, 1, "-Sender", 20);
-        button.clearState();
+        // button.clearState();
         return;
       }
       flashReceiveScreen();
       break;
     case PRESCRIPT_DISPLAYED:
-      if (buttonPressed) {
-        Serial.println(button.isPressed());
+      if (button.isPressed()) {
+        state = PRESCRIPT_FINISHED;
+        clearScreen();
+        glitchPrint(4, 0, "_Clear._", 50);
+        delay(2000);
       }
-      // if (button.isPressed()) {
-      //   state = PRESCRIPT_FINISHED;
-      //   clearScreen();
-      //   glitchPrint(4, 0, "_Clear._", 50);
-      // }
       break;
     case PRESCRIPT_FINISHED:
-        state = PRESCRIPT_DISPLAYED;
+      state = IDLE;
       break;
     default:
       break;
