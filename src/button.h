@@ -5,6 +5,8 @@ class Button {
   public:
     Button(int pin);
 
+    void setup();
+
     bool isPressed();
     void setDebounceTime(unsigned long debounceTime);
 

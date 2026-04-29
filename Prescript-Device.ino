@@ -11,7 +11,8 @@ SoftwareSerial BT(2, 3);  // RX, TX
 
 void setup() {
   Serial.begin(9600);
-  BT.begin(38400);  // default HC-06 baud
+  BT.begin(9600);  // default HC-06 baud
+  button.setup();
   setupLCD();
 }
 
@@ -27,7 +28,7 @@ PrescriptReceivedSFX receivedSFX;
 State state = IDLE;
 
 GlitchPrint messagePrinter(0, 0, "Test Prescript", 30);
-GlitchPrint authorPrinter(2, 1, "-Hermes", 20);
+GlitchPrint authorPrinter(0, 1, "-Hermes", 20);
 GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
 GlitchPrint clear2Printer(0, 1, "                ", 20);
 
@@ -37,34 +38,20 @@ String message = String();
 String author = String();
 
 void loop() {
-
-  Serial.println("FOO");
+  // BT.print("success");
 
   switch (state) {
     case IDLE:
       closeScreen();
       message = "";
       author = "";
-      // Serial.print(BT.read());
-
-
-
-      // while (!BT.available()) { delay(10); }
-      // Serial.print(BT.peek());
-      // delay(100);
-      // while (BT.peek() != '\0') {
-      // message += BT.read();
-      // }
-      // message = BT.readStringUntil('\0');
-      // author = BT.readStringUntil('\0');
-
-      // Serial.println(message);
-      // Serial.println(author);
-      //
-      // messagePrinter.setText(message);
-      // authorPrinter.setText(author);
-      // state = PRESCRIPT_RECEIVED;
-      // openScreen();
+      while (!BT.available()) delay(10);
+      message = BT.readStringUntil('\0');
+      author = BT.readStringUntil('\0');
+      messagePrinter.setText(message);
+      authorPrinter.setText("-" + author);
+      state = PRESCRIPT_RECEIVED;
+      openScreen();
       break;
     case PRESCRIPT_RECEIVED:
       receivedSFX.loop();
@@ -75,6 +62,8 @@ void loop() {
         delay(1000);
         confirmScreen();
         delay(500);
+        glitchPrint(0, 0, "                ", 4);
+        glitchPrint(0, 1, "                ", 2);
         return;
       }
       flashReceiveScreen();
@@ -97,6 +86,11 @@ void loop() {
       clearPrinter.loop();
       clear2Printer.loop();
       if (clearPrinter.finished() && clear2Printer.finished()) {
+        if (button.isPressed()) {
+          BT.write((int)1);
+        } else {
+          BT.write((int)0);
+        }
         clearPrinter.reset();
         clear2Printer.reset();
         delay(5000);
@@ -107,21 +101,3 @@ void loop() {
       break;
   }
 }
-
-
-// button.loop();
-// if (button.isPressed()) {
-//   BT.println("Button Press\n");
-// }
-//
-// while (BT.available()) {
-//   if (message.length() >= 28) {
-//     continue;
-//   }
-//   int c = BT.read();
-//   if (c == '\0') {
-//     Serial.println("Message: \"" + message + '"');
-//     Serial.println("Length: " + String(message.length()));
-//     message = "";
-//   }
-//   message += (char)c;

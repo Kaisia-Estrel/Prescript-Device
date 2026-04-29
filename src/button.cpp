@@ -4,8 +4,11 @@
 
 
 Button::Button(int pin) {
-  pinMode(pin, INPUT_PULLUP);
   this->m_pin = pin;
+}
+
+void Button::setup() {
+  pinMode(m_pin, INPUT_PULLUP);
 }
 
 bool Button::isPressed() {
