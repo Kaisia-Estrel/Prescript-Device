@@ -12,7 +12,7 @@ SoftwareSerial BT(2, 3);  // RX, TX
 PrescriptReceivedSFX receivedSFX;
 
 #define MAX_MESSAGE_LENGTH 63
-#define MAX_AUTHOR_LENGTH 53
+#define MAX_AUTHOR_LENGTH 32
 
 char message[MAX_MESSAGE_LENGTH] = "Test Prescript 123456";
 char author[MAX_AUTHOR_LENGTH] = "From Hermes:";
