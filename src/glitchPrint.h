@@ -2,17 +2,16 @@
 
 class GlitchPrint {
 public:
-  GlitchPrint(int x_, int y_, String text_, int loopSize_);
+  GlitchPrint(int x_, int y_, const char* text, int loopSize_);
   bool finished() const;
   void loop();
   void reset();
-  void setText(String text_);
 
 private:
   int startX;
   int x;
   int y;
-  String text;
+  const char* m_text;
   int loopSize;
   unsigned long lastStep;
   int j;

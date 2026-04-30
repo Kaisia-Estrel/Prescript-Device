@@ -4,16 +4,36 @@
 #include "src/button.h"
 #include "src/audio.h"
 #include "src/glitchPrint.h"
+#include "src/message-scroller.h"
 
 Button button(7);
 SoftwareSerial BT(2, 3);  // RX, TX
 
+PrescriptReceivedSFX receivedSFX;
+
+#define MAX_MESSAGE_LENGTH 63
+#define MAX_AUTHOR_LENGTH 53
+
+char message[MAX_MESSAGE_LENGTH] = "Test Prescript 123456";
+char author[MAX_AUTHOR_LENGTH] = "From Hermes:";
+
+MessageScroller messageScroller = MessageScroller(message);
+GlitchPrint authorPrinter = GlitchPrint(0, 0, author, 80);
+GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
+GlitchPrint clear2Printer(0, 1, "                ", 20);
+// GlitchPrint messagePrinter = GlitchPrint(0, 0, 30);
 
 void setup() {
   Serial.begin(9600);
   BT.begin(9600);  // default HC-06 baud
   button.setup();
   setupLCD();
+
+  // messageScroller.setText(message);
+  // messagePrinter.setText(message);
+  // authorPrinter.setText(author);
+  // clearPrinter.setText("    _Clear_.    ");
+  // clear2Printer.setText("                ");
 }
 
 enum State {
@@ -23,33 +43,20 @@ enum State {
   PRESCRIPT_FINISHED,
 };
 
-PrescriptReceivedSFX receivedSFX;
-// State state = PRESCRIPT_DISPLAYED;
-State state = IDLE;
 
-GlitchPrint messagePrinter(0, 0, "Test Prescript", 30);
-GlitchPrint authorPrinter(0, 1, "-Hermes", 20);
-GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
-GlitchPrint clear2Printer(0, 1, "                ", 20);
 
-#define MAX_MESSAGE_LENGTH 63
-#define MAX_AUTHOR_LENGTH 23
-String message = String();
-String author = String();
-
+State state = PRESCRIPT_DISPLAYED;
+// State state = IDLE;
 void loop() {
-  // BT.print("success");
-
   switch (state) {
     case IDLE:
       closeScreen();
-      message = "";
-      author = "";
       while (!BT.available()) delay(10);
-      message = BT.readStringUntil('\0');
-      author = BT.readStringUntil('\0');
-      messagePrinter.setText(message);
-      authorPrinter.setText("-" + author);
+      // message = BT.readStringUntil('\0');
+      // author = BT.readStringUntil('\0');
+      // messagePrinter.setText(message);
+      // authorPrinter.setText("-" + author);
+      // messageScroller.setText(message);
       state = PRESCRIPT_RECEIVED;
       openScreen();
       break;
@@ -69,13 +76,16 @@ void loop() {
       flashReceiveScreen();
       break;
     case PRESCRIPT_DISPLAYED:
-      messagePrinter.loop();
-      if (messagePrinter.finished()) {
-        authorPrinter.loop();
-      }
+      authorPrinter.loop();
+      // messageScroller.loop();
+      // messagePrinter.loop();
+      // if (messagePrinter.finished()) {
+      //   messageScroller->loop();
+      //   authorPrinter.loop();
+      // }
 
       if (button.isPressed()) {
-        messagePrinter.reset();
+        // messagePrinter.reset();
         authorPrinter.reset();
         state = PRESCRIPT_FINISHED;
         tone(BUZZER_PIN, 44000, 100);

@@ -36,9 +36,10 @@ void glitchprintAudioLoop(int modeAmp) {
   }
 }
 
-GlitchPrint::GlitchPrint(int x_, int y_, String text_, int loopSize_)
-    : startX(x_), text(text_), loopSize(loopSize_),
-      lastStep(0), x(x_), y(y_), j(0) {}
+GlitchPrint::GlitchPrint(int x_, int y_, const char* text, int loopSize_)
+    : startX(x_), loopSize(loopSize_),
+      lastStep(0), x(x_), y(y_), j(0), m_text(text) {
+      }
 
 bool GlitchPrint::finished() const {
   return j > loopSize;
@@ -46,16 +47,11 @@ bool GlitchPrint::finished() const {
 
 void GlitchPrint::reset() {
   j = 0;
-  // i = 0;
   x = startX;
 }
 
-void GlitchPrint::setText(String text_) {
-  text = text_;
-  reset();
-}
-
 void GlitchPrint::loop() {
+  // Serial.println(m_text);
   if (j > loopSize) return;
 
   if (j > loopSize * 0.75) {
@@ -66,17 +62,18 @@ void GlitchPrint::loop() {
 
   unsigned long now = millis();
   if (j >= 1 && now - lastStep < 100) return;
+  
+  // Serial.println(m_text);
 
   lcd.setCursor(x, y);
-  for (int i = 0; i < min(16 - startX, text.length()); i++) {
+  for (int i = 0; i < 16; i++) {
+    if(m_text[i] == '\0') {
+      break;
+    }
     x++;
     bool isText = random(0, loopSize) - (loopSize - j - 1) >= 0;
     if (isText) {
-      if (text.length() > 16 && i == 15) {
-        lcd.write('-');
-      } else {
-        lcd.write(text[i]);
-      }
+      lcd.write(m_text[i]);
     } else {
       switch (random(0, 6)) {
         case 0:
@@ -99,7 +96,6 @@ void GlitchPrint::loop() {
           break;
       }
     }
-    // i++;
   } 
 
   j++;
