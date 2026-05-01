@@ -17,8 +17,8 @@
           pkgs.arduino-language-server
           pkgs.arduino-cli
           pkgs.clang-tools
-          pkgs.screen
           pkgs.picocom
+          pkgs.glibc.dev
         ];
       };
 

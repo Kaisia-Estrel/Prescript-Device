@@ -11,29 +11,22 @@ SoftwareSerial BT(2, 3);  // RX, TX
 
 PrescriptReceivedSFX receivedSFX;
 
-#define MAX_MESSAGE_LENGTH 63
+#define MAX_MESSAGE_LENGTH 128
 #define MAX_AUTHOR_LENGTH 32
 
-char message[MAX_MESSAGE_LENGTH] = "Test Prescript 123456";
+char message[MAX_MESSAGE_LENGTH] = "abcdefghijklmnopqrstuv";
 char author[MAX_AUTHOR_LENGTH] = "From Hermes:";
 
 MessageScroller messageScroller = MessageScroller(message);
 GlitchPrint authorPrinter = GlitchPrint(0, 0, author, 80);
 GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
 GlitchPrint clear2Printer(0, 1, "                ", 20);
-// GlitchPrint messagePrinter = GlitchPrint(0, 0, 30);
 
 void setup() {
   Serial.begin(9600);
   BT.begin(9600);  // default HC-06 baud
   button.setup();
   setupLCD();
-
-  // messageScroller.setText(message);
-  // messagePrinter.setText(message);
-  // authorPrinter.setText(author);
-  // clearPrinter.setText("    _Clear_.    ");
-  // clear2Printer.setText("                ");
 }
 
 enum State {
@@ -76,8 +69,8 @@ void loop() {
       flashReceiveScreen();
       break;
     case PRESCRIPT_DISPLAYED:
-      authorPrinter.loop();
-      // messageScroller.loop();
+      // authorPrinter.loop();
+      messageScroller.loop();
       // messagePrinter.loop();
       // if (messagePrinter.finished()) {
       //   messageScroller->loop();

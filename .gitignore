@@ -1,2 +1,5 @@
 .direnv
 sketch.yaml
+build
+compile_commands.json
+.cache/

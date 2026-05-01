@@ -1,14 +1,23 @@
 #pragma once
 
+#include <stdint.h>
+
 class MessageScroller {
 public:
-  MessageScroller(const char* messsage);
-  void setPauseLength(int scrollLength);
-  // void setText(const String& message);
+  MessageScroller(const char *messsage);
   void loop();
+  void reset();
+
 private:
+  void update_line(uint8_t line);
+
   unsigned long m_lastUpdate;
   unsigned long m_pauseLength;
-  int m_step;
-  const char* m_message;
+  unsigned int m_step;
+  uint8_t m_line;
+  char m_linestr[17];
+  bool m_loop;
+  uint8_t m_linecount;
+
+  const char *m_message;
 };
