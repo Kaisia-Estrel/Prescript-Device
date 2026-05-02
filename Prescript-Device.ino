@@ -14,15 +14,16 @@ PrescriptReceivedSFX receivedSFX;
 #define MAX_MESSAGE_LENGTH 128
 #define MAX_AUTHOR_LENGTH 32
 
-char message[MAX_MESSAGE_LENGTH] = "abcdefghijklmnopqrstuv";
+char message[MAX_MESSAGE_LENGTH] = "When lacerating through space itself with a scythe like a certain someone";
 char author[MAX_AUTHOR_LENGTH] = "From Hermes:";
 
-MessageScroller messageScroller = MessageScroller(message);
 GlitchPrint authorPrinter = GlitchPrint(0, 0, author, 80);
 GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
 GlitchPrint clear2Printer(0, 1, "                ", 20);
 
+MessageScroller messageScroller;
 void setup() {
+  messageScroller.begin(message);
   Serial.begin(9600);
   BT.begin(9600);  // default HC-06 baud
   button.setup();

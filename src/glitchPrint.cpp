@@ -36,10 +36,25 @@ void glitchprintAudioLoop(int modeAmp) {
   }
 }
 
+GlitchPrint::GlitchPrint() {
+
+}
+
 GlitchPrint::GlitchPrint(int x_, int y_, const char* text, int loopSize_)
     : startX(x_), loopSize(loopSize_),
       lastStep(0), x(x_), y(y_), j(0), m_text(text) {
       }
+
+void GlitchPrint::begin(int x_, int y_, const char* text, int loopSize_)
+{
+    startX = x_;
+    loopSize = loopSize_;
+    lastStep = 0;
+    x = x_;
+    y = y_;
+    j = 0;
+    m_text = text;
+}
 
 bool GlitchPrint::finished() const {
   return j > loopSize;
@@ -104,3 +119,11 @@ void GlitchPrint::loop() {
   lastStep = now;
 }
 
+void GlitchPrint::setX(int x) {
+  startX = x;
+  this->x = startX;
+}
+
+void GlitchPrint::setY(int y) {
+  this->y = y;
+}

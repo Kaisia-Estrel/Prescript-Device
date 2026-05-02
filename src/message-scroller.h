@@ -2,9 +2,12 @@
 
 #include <stdint.h>
 
+#include "glitchPrint.h"
+
 class MessageScroller {
 public:
-  MessageScroller(const char *messsage);
+  MessageScroller();
+  void begin(const char* message);
   void loop();
   void reset();
 
@@ -18,6 +21,7 @@ private:
   char m_linestr[17];
   bool m_loop;
   uint8_t m_linecount;
+  GlitchPrint m_glitchPrinter;
 
   const char *m_message;
 };
