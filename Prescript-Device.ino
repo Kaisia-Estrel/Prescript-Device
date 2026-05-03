@@ -17,12 +17,15 @@ PrescriptReceivedSFX receivedSFX;
 char message[MAX_MESSAGE_LENGTH] = "When lacerating through space itself with a scythe like a certain someone";
 char author[MAX_AUTHOR_LENGTH] = "From Hermes:";
 
-GlitchPrint authorPrinter = GlitchPrint(0, 0, author, 80);
 GlitchPrint clearPrinter(0, 0, "    _Clear_.    ", 50);
 GlitchPrint clear2Printer(0, 1, "                ", 20);
 
+GlitchPrint authorPrinterLine1(0, 0, "From:", 50);
+;
+GlitchPrint authorPrinter;
 MessageScroller messageScroller;
 void setup() {
+  authorPrinter.begin(0, 1, author, 50);
   messageScroller.begin(message);
   Serial.begin(9600);
   BT.begin(9600);  // default HC-06 baud
@@ -30,29 +33,95 @@ void setup() {
   setupLCD();
 }
 
+enum RxState {
+  WAIT_SOF,
+  WAIT_LEN,
+  READ_PAYLOAD,
+  WAIT_CHECKSUM
+};
+
+int receivePacket(Stream& s, char* buffer, const int max_size) {
+  static RxState state = WAIT_SOF;
+  static uint8_t index = 0;
+  static uint8_t checksum = 0;
+  static int length = 0;
+
+  while (s.available()) {
+
+    uint8_t byte = s.read();
+
+    switch (state) {
+
+      case WAIT_SOF:
+        if (byte == 0xAA) {
+          state = WAIT_LEN;
+        }
+        break;
+
+      case WAIT_LEN:
+        length = byte;
+        if (length > max_size) {
+          state = WAIT_SOF;
+          return -1;
+        }
+        index = 0;
+        checksum = 0;
+        state = READ_PAYLOAD;
+        break;
+
+      case READ_PAYLOAD:
+        buffer[index++] = byte;
+        checksum ^= byte;
+
+        if (index >= length)
+          state = WAIT_CHECKSUM;
+        break;
+
+      case WAIT_CHECKSUM:
+        state = WAIT_SOF;
+
+        if (checksum == byte) {
+          return length;
+        }
+        break;
+    }
+  }
+  return -1;
+}
+
 enum State {
-  IDLE,
+  START,
+  WAIT_FOR_MESSAGE,
+  WAIT_FOR_AUTHOR,
   PRESCRIPT_RECEIVED,
   PRESCRIPT_DISPLAYED,
   PRESCRIPT_FINISHED,
 };
 
-
-
-State state = PRESCRIPT_DISPLAYED;
-// State state = IDLE;
+State state = START;
 void loop() {
   switch (state) {
-    case IDLE:
+    case START:
       closeScreen();
-      while (!BT.available()) delay(10);
-      // message = BT.readStringUntil('\0');
-      // author = BT.readStringUntil('\0');
-      // messagePrinter.setText(message);
-      // authorPrinter.setText("-" + author);
-      // messageScroller.setText(message);
-      state = PRESCRIPT_RECEIVED;
-      openScreen();
+      state = WAIT_FOR_MESSAGE;
+      break;
+    case WAIT_FOR_MESSAGE:
+      {
+        int msg_len = receivePacket(BT, message, MAX_MESSAGE_LENGTH);
+        if (msg_len == -1) return;
+        message[msg_len] = '\0';
+        Serial.println(message);
+        state = WAIT_FOR_AUTHOR;
+      }
+      break;
+    case WAIT_FOR_AUTHOR:
+      {
+        int msg_len = receivePacket(BT, author, MAX_AUTHOR_LENGTH);
+        if (msg_len == -1) return;
+        author[msg_len] = '\0';
+        state = PRESCRIPT_RECEIVED;
+        openScreen();
+      }
       break;
     case PRESCRIPT_RECEIVED:
       receivedSFX.loop();
@@ -70,16 +139,14 @@ void loop() {
       flashReceiveScreen();
       break;
     case PRESCRIPT_DISPLAYED:
-      // authorPrinter.loop();
-      messageScroller.loop();
-      // messagePrinter.loop();
-      // if (messagePrinter.finished()) {
-      //   messageScroller->loop();
-      //   authorPrinter.loop();
-      // }
+      authorPrinterLine1.loop();
+      authorPrinter.loop();
+      if (authorPrinterLine1.finished() && authorPrinter.finished()) {
+        messageScroller.loop();
+      }
 
       if (button.isPressed()) {
-        // messagePrinter.reset();
+        messageScroller.reset();
         authorPrinter.reset();
         state = PRESCRIPT_FINISHED;
         tone(BUZZER_PIN, 44000, 100);
@@ -98,7 +165,7 @@ void loop() {
         clearPrinter.reset();
         clear2Printer.reset();
         delay(5000);
-        state = IDLE;
+        state = START;
       }
       break;
     default:
