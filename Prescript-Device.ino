@@ -94,12 +94,24 @@ enum State {
   WAIT_FOR_MESSAGE,
   WAIT_FOR_AUTHOR,
   PRESCRIPT_RECEIVED,
+  AUTHOR_DISPLAYED,
   PRESCRIPT_DISPLAYED,
   PRESCRIPT_FINISHED,
 };
 
 State state = START;
 void loop() {
+  button.loop();
+  if (button.longPressed() && state >= PRESCRIPT_RECEIVED) {
+    BT.write((int)1);  //Unsuccessfull return;
+    messageScroller.reset();
+    authorPrinterLine1.reset();
+    authorPrinter.reset();
+    state = START;
+    tone(BUZZER_PIN, 14000, 100);
+    delay(500);
+  }
+
   switch (state) {
     case START:
       closeScreen();
@@ -110,7 +122,6 @@ void loop() {
         int msg_len = receivePacket(BT, message, MAX_MESSAGE_LENGTH);
         if (msg_len == -1) return;
         message[msg_len] = '\0';
-        Serial.println(message);
         state = WAIT_FOR_AUTHOR;
       }
       break;
@@ -125,9 +136,9 @@ void loop() {
       break;
     case PRESCRIPT_RECEIVED:
       receivedSFX.loop();
-      if (button.isPressed()) {
+      if (button.clicked()) {
         receivedSFX.restart();
-        state = PRESCRIPT_DISPLAYED;
+        state = AUTHOR_DISPLAYED;
         tone(BUZZER_PIN, 44000, 100);
         delay(1000);
         confirmScreen();
@@ -138,15 +149,23 @@ void loop() {
       }
       flashReceiveScreen();
       break;
-    case PRESCRIPT_DISPLAYED:
-      authorPrinterLine1.loop();
-      authorPrinter.loop();
-      if (authorPrinterLine1.finished() && authorPrinter.finished()) {
-        messageScroller.loop();
+    case AUTHOR_DISPLAYED:
+      {
+        authorPrinterLine1.loop();
+        authorPrinter.loop();
+        if (authorPrinterLine1.finished() && authorPrinter.finished()) {
+          delay(2000);
+          lcd.clear();
+          state = PRESCRIPT_DISPLAYED;
+        }
       }
+      break;
+    case PRESCRIPT_DISPLAYED:
+      messageScroller.loop();
 
-      if (button.isPressed()) {
+      if (button.released()) {
         messageScroller.reset();
+        authorPrinterLine1.reset();
         authorPrinter.reset();
         state = PRESCRIPT_FINISHED;
         tone(BUZZER_PIN, 44000, 100);
@@ -154,14 +173,10 @@ void loop() {
       }
       break;
     case PRESCRIPT_FINISHED:
+      BT.write((int)0xEE);  //Successfull return;
       clearPrinter.loop();
       clear2Printer.loop();
       if (clearPrinter.finished() && clear2Printer.finished()) {
-        if (button.isPressed()) {
-          BT.write((int)1);
-        } else {
-          BT.write((int)0);
-        }
         clearPrinter.reset();
         clear2Printer.reset();
         delay(5000);

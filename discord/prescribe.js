@@ -4,6 +4,9 @@ const fs = require('fs');
 const { Worker } = require('worker_threads');
 
 const worker = new Worker("./prescript-worker.js");
+// process.on('exit', () => worker.terminate());
+// process.on('SIGINT', () => worker.terminate());
+// process.on('SIGTERM', () => worker.terminate());
 
 let id = 0;
 let pending = new Map();
@@ -29,7 +32,7 @@ worker.on('message', async ({jobId, result}) => {
   if (result) {
     await interaction.followUp(`<@${userId}>, Prescript Completed`);
   } else {
-    await interaction.followUp(`<@${userId}>, Prescript Finished`);
+    await interaction.followUp(`<@${userId}>, Prescript Failed`);
   }
 });
 
@@ -42,11 +45,16 @@ module.exports = {
     .addStringOption(option =>
       option.setName('content')
         .setDescription('Prescript Text')
+        .setMaxLength(120)
         .setRequired(true))
   ,
   async execute(interaction) {
-    const content = interaction.options.getString('content').substr(0,60);
-    await interaction.reply("Prescript Given");
+    const content = interaction.options.getString('content');
+    if (pending.size > 0) {
+      await interaction.reply(`Prescript Given, Position in queue: ${pending.size}`);
+    } else {
+      await interaction.reply("Prescript Given");
+    }
     enqueue(content, interaction);
   },
 };
